@@ -1,3 +1,9 @@
+### v1.7.1 (2025-12-19)
+
+- **Fixes**:
+    - Fix `PartialEq`, `PartialOrd`, and `Ord` implementations for `RangeInclusiveMap` (and `RangeInclusiveSet`). These previously only compared the starts of ranges instead of the entire range. (Same class of bug that was fixed for `RangeMap` in v1.3.1.)
+
+
 ### v1.7.0 (2025-11-15)
 
 - **Features**:
