@@ -70,7 +70,7 @@ where
     V: PartialEq,
 {
     fn eq(&self, other: &RangeInclusiveMap<K, V, StepFnsT>) -> bool {
-        self.btm == other.btm
+        self.iter().eq(other.iter())
     }
 }
 
@@ -88,7 +88,7 @@ where
 {
     #[inline]
     fn partial_cmp(&self, other: &RangeInclusiveMap<K, V, StepFnsT>) -> Option<Ordering> {
-        self.btm.partial_cmp(&other.btm)
+        self.expanded_iter().partial_cmp(other.expanded_iter())
     }
 }
 
@@ -99,7 +99,7 @@ where
 {
     #[inline]
     fn cmp(&self, other: &RangeInclusiveMap<K, V, StepFnsT>) -> Ordering {
-        self.btm.cmp(&other.btm)
+        self.expanded_iter().cmp(other.expanded_iter())
     }
 }
 
@@ -127,6 +127,11 @@ impl<K, V, StepFnsT> RangeInclusiveMap<K, V, StepFnsT> {
         Iter {
             inner: self.btm.iter(),
         }
+    }
+
+    // Iterate pairs of (range start, range end, value) for comparisons.
+    fn expanded_iter(&self) -> impl Iterator<Item = (&K, &K, &V)> {
+        self.btm.iter().map(|(k, v)| (k.start(), k.end(), v))
     }
 }
 
@@ -1937,6 +1942,30 @@ mod tests {
     const _MAP: RangeInclusiveMap<u32, bool> = RangeInclusiveMap::new();
     #[cfg(feature = "const_fn")]
     const _MAP2: RangeInclusiveMap<u32, bool> = RangeInclusiveMap::new_with_step_fns();
+
+    // Equality
+
+    #[test]
+    fn test_equality_same_start_different_end() {
+        let mut a: RangeInclusiveMap<u32, ()> = RangeInclusiveMap::new();
+        a.insert(0..=5, ());
+
+        let mut b: RangeInclusiveMap<u32, ()> = RangeInclusiveMap::new();
+        b.insert(0..=2, ());
+
+        assert_ne!(a, b);
+    }
+
+    #[test]
+    fn test_equality_identical_ranges() {
+        let mut a: RangeInclusiveMap<u32, ()> = RangeInclusiveMap::new();
+        a.insert(0..=5, ());
+
+        let mut b: RangeInclusiveMap<u32, ()> = RangeInclusiveMap::new();
+        b.insert(0..=5, ());
+
+        assert_eq!(a, b);
+    }
 
     #[cfg(feature = "quickcheck")]
     quickcheck::quickcheck! {
